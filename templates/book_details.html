@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>{{bookInfo.title}}</title>
+		<link rel="stylesheet"  href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+		<script src="{{url_for('static', filename = 'book_details.js')}}"></script>
+		<style>
+			#container{
+				margin-bottom: 15px;
+			}
+			#img {
+				padding: 20px;
+			}
+			p {
+				font-size: 15px;
+			}
+			h1 {
+				text-align: center;
+				font-weight: bolder;
+				color:cornflowerblue
+			}
+			#overlay {
+				
+				display:none;
+				
+			}
+			#button {
+				text-align: center;
+			}
+			#form {
+				padding: 10px;
+				margin: 20px;
+				border: 1px solid grey;
+				border-radius: 10px;
+			}
+			#rating {
+				border: 1px solid black;
+				border-radius: 5px;
+				margin: 5px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container" id="container">
+			<div class="page-header row">
+				<span class="col-sm-2"><a href="#" onclick="goBack()">Go to search results</a></span>
+				<span class="col-sm-8">	<h1>{{bookInfo.title}}<br/><small>{{bookInfo.subtitle}}</small></h1></span>
+				<span class="col-sm-2 text-right">
+				
+					<a href="{{url_for('logout')}}">Logout</a>
+				</span>
+			</div>
+			
+			
+			<div class="row">
+				<div class="col-sm-9">
+					<p><b>Author(s) :</b> 
+						<ul>
+						{% for author in bookInfo.authors %}
+							<li><p>{{author}}</p></li>
+						{% endfor %}
+						</ul>
+					</p>
+					<p><b>Year : </b>{{bookInfo.publishedDate}}</p>
+					<p><b>Description : </b> {{bookInfo.description}}</p>
+					<p><b>Number of Ratings : </b> {{bookInfo.ratingsCount}}</p>
+					<p><b>Average Rating : </b>{{bookInfo.averageRating}}</p>
+					<p><b>No. Of Pages : </b>{{bookInfo.pageCount}}</p>
+					<p><b>Category(s) : </b>
+					{% for x in bookInfo.categories %}
+						{{x}}
+					{% endfor %}
+					</p>
+					<p><b>Preview Link : </b><a href="{{bookInfo.previewLink}}" target="_blank">Click here for book preview</a></p>
+				</div>
+				<div class="col-sm-3" id="img">
+					<img src="{{bookInfo['imageLinks']['thumbnail']}}" alt="Book cover picture" height="320vw" width="250vw"/>
+				</div>
+			</div>
+			
+			<div class="row">
+				
+				{% if bookInfo['your_rating'] %}
+					<div class="col-sm-4" id="rating">
+						<h4><b>Your Review</b></h4> 
+						<p><b>Rating :</b> {{bookInfo['your_rating']}}</p>
+						<p><b>Review :</b>
+							{% if(bookInfo['your_review']) %}
+								{{bookInfo['your_review']}}
+							{% else %}
+								-
+							{% endif %}
+						</p>
+					</div>
+				{% endif %}
+				
+			</div>
+			<div id="overlay">
+				
+				<div id="form">
+					<form 
+						class="form-horizontal"
+						action="/book/{{bookInfo['industryIdentifiers'][0]['identifier']}}/{{bookInfo['title']}}"  
+						method="POST"
+						onsubmit="toggleForm()"
+					>
+						<div class="form-group">
+							<label class="col-sm-2" for="rating">Rating:</label>
+							<div class="col-sm-10">
+								<input type="number" class="form-control" name="rating" placeholder="Enter your rating(1-5)" min="1" max="5" required/>
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-sm-2" for="review">Review:</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" name="review" placeholder="Write a review"/>
+							</div>
+						</div>
+						<div id="button">
+							<button type="submit" class="btn btn-default">Submit</button>
+							<button onclick="toggleForm()" class="btn btn-default">Cancel</button>
+						</div>
+						
+					</form>
+				</div>
+				
+			</div>
+			<div id="addButton">
+				<button onclick="toggleForm()"  class="btn btn-info">
+					{% if bookInfo['your_rating'] %}
+						Edit Review
+					{% else %}
+						Add Review
+					{% endif %}
+				</button>
+				{% if bookInfo['your_rating'] %}
+				<form action="/deleteReview/{{bookInfo['industryIdentifiers'][0]['identifier']}}/{{bookInfo['title']}}" 
+					method="GET" 
+					style="display:inline"
+					onsubmit="return confirmDelete()"
+				>
+					<button type="submit" class="btn btn-info">
+						Delete Review
+					</button>
+				</form>
+				{% endif %}
+			</div>
+		</div>
+	</body>
+</html>

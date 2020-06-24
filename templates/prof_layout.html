@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>{% block title %}{% endblock %}</title>
+		<link rel="stylesheet"  href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+		<script>
+			function showBooks(){
+				document.getElementById("books").style.display = "block"
+			}
+			function hideBooks(){
+				document.getElementById("books").style.display = "none"
+			}
+			function validateInput(){
+				var pass1 = document.getElementById('cpass').value
+				var pass2 = document.getElementById('pass').value
+				if(pass1 === pass2 ){
+					return true
+				}
+				alert("The passwords must match")
+				return false
+			}
+			function validateInput(){
+				var len = document.getElementById("phone").value.toString().length
+				if(len != 10){
+					alert("Enter a valid phone number!")
+					return false
+				}
+				return true
+			}
+		</script>
+		<style>
+			
+			button {
+				text-align: center;
+			}
+			p {
+				font-size: 20px;
+			}
+			table {
+				padding: 5px;
+				font-size: 20px;
+			}
+			td{
+				padding : 10px;
+			}
+			#books{
+				display: none;
+				justify-content: center;
+				align-items: center;
+				position: absolute;
+				width: 50%;
+				height: 60%;
+				top:13vw;
+				left:30vw;
+				background-color: rgba(255,255,255,1);
+				border: 2px solid black;
+				border-radius: 4px;
+				padding: 10px;
+			}
+			#b1{
+				position:absolute;
+				bottom: 20px;
+				right:30px;
+			}
+			#li1{
+				font-size: 20px;
+			}
+		</style>
+	</head>
+	<body>
+		
+	<div class="container">
+		
+		<div class="jumbotron">
+			<div class="row">
+				<div class="col-sm-2">
+					<a href="{{url_for('home')}}">Go to home</a>
+				</div>
+				<div class="col-sm-8">
+					<h2 class="text-center">{% block heading %}{% endblock %}</h2>
+				</div>
+				<div class="col-sm-2 text-right">
+					<a href="{{url_for('logout')}}">Logout</a>
+				</div>
+			</div>
+		</div>
+			{% block body %}
+			{% endblock %}
+		</div>
+	</body>
+</html>
