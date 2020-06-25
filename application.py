@@ -3,7 +3,7 @@ from flask import Flask, session, render_template, request, redirect, jsonify
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
-from configKeys import configKey
+
 
 app = Flask(__name__)
 
@@ -19,8 +19,8 @@ Session(app)
 # Set up database
 engine = create_engine(os.getenv("DATABASE_URL"))
 db = scoped_session(sessionmaker(bind=engine))
-key = configKey["apikey"]
-password_key = configKey["password_key"]
+key = "#"#apikey
+password_key = "#"#random string to be added to password 
 
 @app.route("/", methods=["POST","GET"])
 def index():
