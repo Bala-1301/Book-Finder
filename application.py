@@ -3,6 +3,7 @@ from flask import Flask, session, render_template, request, redirect, jsonify
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+from configKeys import configKey
 
 app = Flask(__name__)
 
@@ -18,8 +19,8 @@ Session(app)
 # Set up database
 engine = create_engine(os.getenv("DATABASE_URL"))
 db = scoped_session(sessionmaker(bind=engine))
-key = "AIzaSyCsaIMBUsj7_G5Knjx1ADhnmjIRZjqJh-Y"
-password_key = "!PQ&C#8Z"
+key = configKey["apikey"]
+password_key = configKey["password_key"]
 
 @app.route("/", methods=["POST","GET"])
 def index():
@@ -147,51 +148,6 @@ def change_password():
 @app.route("/book/<isbn_no>/<title>", methods=["GET", "POST"])
 def book(isbn_no, title):
     user_id = session['user_id']
-    if request.method == "GET":
-        query = title + "+isbn:" + isbn_no
-        response = requests.get("https://www.googleapis.com/books/v1/volumes", params={"q" : query ,"key" : key})
-        result = response.json()
-    
-        try:
-            bookInfo = result['items'][0]['volumeInfo']
-        except:
-            return render_template("error.html", message = "Sorry! The requested book couldn't be found")
-
-        
-        if('imageLinks' not in bookInfo):
-            bookInfo['imageLinks'] = {'thumbnail' : '#'}
-        if('ratingsCount' not in bookInfo):
-            bookInfo['ratingsCount'] = "No ratings Yet"
-            bookInfo['averageRating'] = "N/A"
-        
-        if db.execute("SELECT isbn_no FROM isbn WHERE isbn_no = :isbn_no", {"isbn_no": isbn_no}).rowcount != 0:
-            ratings = db.execute("SELECT rating FROM reviews r JOIN isbn i ON i.id=r.isbn_id WHERE isbn_no=:isbn_no",{"isbn_no": isbn_no})        
-            total_rating1 = 0
-            for rating in ratings.fetchall()[0]:
-                total_rating1 += rating
-            try:
-                
-                total_rating2 = bookInfo['averageRating'] * bookInfo['ratingsCount']
-                total = total_rating1 + total_rating2
-                bookInfo['averageRating'] = round(total/(ratings.rowcount + bookInfo['ratingsCount']),2)
-            except:
-                bookInfo['averageRating'] = round(total_rating1/ratings.rowcount,2)
-            
-            try:
-                bookInfo['ratingsCount'] += ratings.rowcount
-            except:
-                bookInfo['ratingsCount'] = ratings.rowcount
-            
-            feedback = db.execute("SELECT review, rating from reviews r JOIN isbn i ON i.id=r.isbn_id WHERE isbn_no=:isbn_no AND user_id=:user_id",
-            {"isbn_no":isbn_no, "user_id": user_id})
-            
-            if feedback.rowcount != 0:
-                feedback = feedback.fetchall()
-                bookInfo['your_review'] = feedback[0][0]
-                bookInfo['your_rating'] = feedback[0][1]
-
-        return render_template("book_details.html", bookInfo=bookInfo, reviewForm = False)
-
 
     if request.method == "POST":
     
@@ -223,10 +179,50 @@ def book(isbn_no, title):
                 "user_id": user_id
             })
         db.commit()
-        return jsonify({"success":True})
-        # except:
-        #     return jsonify({"success": False})
+    query = title + "+isbn:" + isbn_no
+    response = requests.get("https://www.googleapis.com/books/v1/volumes", params={"q" : query ,"key" : key})
+    result = response.json()
+
+    try:
+        bookInfo = result['items'][0]['volumeInfo']
+    except:
+        return render_template("error.html", message = "Sorry! The requested book couldn't be found")
+
+    
+    if('imageLinks' not in bookInfo):
+        bookInfo['imageLinks'] = {'thumbnail' : '#'}
+    if('ratingsCount' not in bookInfo):
+        bookInfo['ratingsCount'] = "No ratings Yet"
+        bookInfo['averageRating'] = "N/A"
+    
+    if db.execute("SELECT isbn_no FROM isbn WHERE isbn_no = :isbn_no", {"isbn_no": isbn_no}).rowcount != 0:
+        ratings = db.execute("SELECT rating FROM reviews r JOIN isbn i ON i.id=r.isbn_id WHERE isbn_no=:isbn_no",{"isbn_no": isbn_no})        
+        total_rating1 = 0
+        for rating in ratings.fetchall()[0]:
+            total_rating1 += rating
+        try:
+            
+            total_rating2 = bookInfo['averageRating'] * bookInfo['ratingsCount']
+            total = total_rating1 + total_rating2
+            bookInfo['averageRating'] = round(total/(ratings.rowcount + bookInfo['ratingsCount']),2)
+        except:
+            bookInfo['averageRating'] = round(total_rating1/ratings.rowcount,2)
         
+        try:
+            bookInfo['ratingsCount'] += ratings.rowcount
+        except:
+            bookInfo['ratingsCount'] = ratings.rowcount
+        
+        feedback = db.execute("SELECT review, rating from reviews r JOIN isbn i ON i.id=r.isbn_id WHERE isbn_no=:isbn_no AND user_id=:user_id",
+        {"isbn_no":isbn_no, "user_id": user_id})
+        
+        if feedback.rowcount != 0:
+            feedback = feedback.fetchall()
+            bookInfo['your_review'] = feedback[0][0]
+            bookInfo['your_rating'] = feedback[0][1]
+
+    return render_template("book_details.html", bookInfo=bookInfo, reviewForm = False)
+   
 
     
 @app.route("/deleteReview/<isbn_no>/<title>", methods=["GET"])
